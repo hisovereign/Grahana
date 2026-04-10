@@ -14,6 +14,8 @@ Vertical per-app volume control for Linux Cinnamon
 
 2. Download the eclipsite@hisovereign folder and place it in ~/.local/share/cinnamon/applets
 
+   -download the metadata.json and the applet.js then create a folder named eclipsite@hisovereign and place it in ~/.local/share/cinnamon/applets
+
 3. Restart cinnamon (alt + F2 then type r and hit enter) or restart pc
 
 4. Open applet menu (right-click on panel, click applets) and add the eclipsite applet from manage tab.
