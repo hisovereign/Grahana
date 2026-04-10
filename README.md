@@ -28,4 +28,4 @@ Vertical per-app volume control for Linux Cinnamon
 
 Muting sound from browser will make it an inactive sound source and it will dissapear form the list. Unmuting brings it back however this breaks current media information and it will show generic browser name. To fix reload page.
 
-Some browsers currently not supports for media information.
+Some browsers currently not supported for media information.
