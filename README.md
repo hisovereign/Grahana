@@ -11,7 +11,8 @@ Vertical per-app volume control for Linux Cinnamon
 ## Installation
 
 1. Download moonstone and sunstone and place them in ~/.local/bin
-    -Make them executable
+
+   - Make them executable (open up a terminal, paste in command and hit enter)
 ```
 chmod +x ~/.local/bin/moonstone ~/.local/bin/sunstone
 ```
