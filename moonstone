@@ -1,0 +1,124 @@
+#!/usr/bin/env python3
+
+import subprocess
+import json
+import re
+
+# Browser binaries that should show media titles
+BROWSERS = [
+    'firefox', 'firefox-bin',
+    'chrome', 'google-chrome',
+    'chromium',
+    'brave', 'brave-browser',
+    'librewolf', 'librewolf-bin',
+    'edge', 'microsoft-edge',
+    'opera', 'vivaldi'
+]
+
+def is_generic(s):
+    """Check if string is a generic placeholder"""
+    if not s:
+        return True
+    generic = ['audiostream', 'audio stream', 'playback', 'audio #']
+    return any(g in s.lower() for g in generic)
+
+def get_display_name(stream):
+    """Smart naming logic"""
+    binary = stream.get('binary', '').lower()
+    app_name = stream.get('app_name', '')
+    media_name = stream.get('media_name', '')
+    
+    # Check if browser
+    is_browser = any(b in binary for b in BROWSERS)
+    if not is_browser:
+        is_browser = any(b in app_name.lower() for b in BROWSERS)
+    
+    if is_browser:
+        # Browser: use media title if meaningful
+        if media_name and not is_generic(media_name):
+            return media_name
+        # Otherwise use app_name (Brave, LibreWolf, etc.)
+        if app_name and not is_generic(app_name):
+            return app_name
+        return binary
+    
+    # Non-browser: use app_name or binary
+    if app_name and not is_generic(app_name):
+        return app_name
+    return binary if binary else f"Stream {stream['id']}"
+
+def main():
+    result = subprocess.run(['pactl', 'list', 'sink-inputs'], 
+                           capture_output=True, text=True)
+    output = result.stdout
+    
+    streams = []
+    current = {}
+    
+    for line in output.split('\n'):
+        line = line.strip()
+        
+        if 'Sink Input #' in line:
+            if current:
+                streams.append(current)
+            match = re.search(r'#(\d+)', line)
+            current = {
+                'id': int(match.group(1)),
+                'app_name': '',
+                'binary': '',
+                'media_name': '',
+                'volume': 0
+            }
+        
+        elif 'application.name =' in line:
+            match = re.search(r'"([^"]+)"', line)
+            if match:
+                current['app_name'] = match.group(1)
+        
+        elif 'application.process.binary =' in line:
+            match = re.search(r'"([^"]+)"', line)
+            if match:
+                current['binary'] = match.group(1)
+        
+        elif 'Volume:' in line:
+            match = re.search(r'(\d+)%', line)
+            if match:
+                current['volume'] = int(match.group(1))
+        
+        elif 'media.name =' in line:
+            match = re.search(r'"([^"]+)"', line)
+            if match:
+                current['media_name'] = match.group(1)
+    
+    if current:
+        streams.append(current)
+    
+    # Build output with per-stream naming (no deduplication for browsers)
+    output_streams = []
+    
+    for s in streams:
+        # Skip speech-dispatcher
+        if 'speech-dispatcher' in s.get('app_name', '').lower():
+            continue
+        
+        # Skip streams with no meaningful data
+        if not s['app_name'] and not s['binary']:
+            continue
+        
+        binary = s.get('binary', '').lower()
+        is_browser = any(b in binary for b in BROWSERS)
+        
+        # Don't skip browser streams even if they have generic names
+        name = get_display_name(s)
+        
+        output_streams.append({
+            'id': s['id'],
+            'name': name,
+            'binary': s['binary'],
+            'volume': s['volume']
+        })
+    
+    print(json.dumps(output_streams, indent=2))
+
+if __name__ == '__main__':
+    main()
