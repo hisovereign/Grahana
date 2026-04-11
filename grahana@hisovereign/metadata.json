@@ -1,0 +1,8 @@
+{
+    "uuid": "grahana@hisovereign",
+    "name": "Grahaṇa",
+    "description": "Per-app volume sliders with video titles for browsers",
+    "icon": "audio-card",
+    "max-instances": 1,
+    "version": "1.0.0"
+}
