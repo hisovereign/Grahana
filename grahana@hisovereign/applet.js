@@ -22,21 +22,17 @@ class GrahanaApplet extends Applet.IconApplet {
         this.menuManager = new PopupMenu.PopupMenuManager(this);
         this.menuManager.addMenu(this.menu);
 
-        this._pollingInterval = null;
-        
+        // No polling interval — refresh only when clicked
         this._buildMenu();
-        this._startPolling();
     }
 
     on_applet_clicked() {
+        // Refresh streams before opening menu
+        this._updateStreams();
         this.menu.toggle();
     }
 
     on_applet_removed_from_panel() {
-        if (this._pollingInterval) {
-            clearInterval(this._pollingInterval);
-            this._pollingInterval = null;
-        }
         if (this.menu) {
             this.menu.destroy();
         }
@@ -47,15 +43,6 @@ class GrahanaApplet extends Applet.IconApplet {
         let header = new PopupMenu.PopupMenuItem("Loading audio streams...");
         header.setSensitive(false);
         this.menu.addMenuItem(header);
-    }
-    
-    _startPolling() {
-        this._updateStreams();
-        this._pollingInterval = setInterval(() => {
-            if (!this.menu.isOpen) {
-                this._updateStreams();
-            }
-        }, 2000);
     }
     
     _updateStreams() {
@@ -74,7 +61,10 @@ class GrahanaApplet extends Applet.IconApplet {
             return;
         }
         
+        // Save current menu state
         let wasOpen = this.menu.isOpen;
+        
+        // Rebuild menu
         this.menu.removeAll();
         
         if (streams.length === 0) {
@@ -87,12 +77,14 @@ class GrahanaApplet extends Applet.IconApplet {
             }
         }
         
+        // Add Sound Settings at the bottom
         let settingsItem = new PopupMenu.PopupMenuItem("Sound Settings");
         settingsItem.connect('activate', () => {
             GLib.spawn_command_line_async("cinnamon-settings sound");
         });
         this.menu.addMenuItem(settingsItem);
         
+        // Reopen if it was open
         if (wasOpen) {
             this.menu.open();
         }
@@ -194,12 +186,10 @@ class GrahanaApplet extends Applet.IconApplet {
             "sd_dummy": "applications-games"
         };
         
-        // Check by binary first
         if (iconMap[binary]) {
             return iconMap[binary];
         }
         
-        // Check by name (for "Playback" streams from Brave)
         if (name === "Brave" || name === "brave") {
             return "brave-browser";
         }
