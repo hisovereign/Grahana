@@ -5,12 +5,22 @@ import json
 import re
 
 # Browser binaries that should show media titles
+# Includes Firefox, Chromium, and many Firefox forks
 BROWSERS = [
+    # Firefox family
     'firefox', 'firefox-bin',
+    'librewolf', 'librewolf-bin',
+    'waterfox', 'waterfox-bin',
+    'icecat', 'icecat-bin',
+    'palemoon', 'palemoon-bin',
+    'basilisk', 'basilisk-bin',
+    'floorp', 'floorp-bin',
+    'zen', 'zen-browser', 'zen-bin',
+    'tor-browser', 'tor-browser-bin',
+    # Chromium family
     'chrome', 'google-chrome',
     'chromium',
     'brave', 'brave-browser',
-    'librewolf', 'librewolf-bin',
     'edge', 'microsoft-edge',
     'opera', 'vivaldi'
 ]
