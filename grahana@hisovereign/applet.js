@@ -27,7 +27,6 @@ class GrahanaApplet extends Applet.IconApplet {
     }
 
     on_applet_clicked() {
-        // Refresh streams before opening menu
         this._updateStreams();
         this.menu.toggle();
     }
@@ -61,10 +60,8 @@ class GrahanaApplet extends Applet.IconApplet {
             return;
         }
         
-        // Save current menu state
         let wasOpen = this.menu.isOpen;
         
-        // Rebuild menu
         this.menu.removeAll();
         
         if (streams.length === 0) {
@@ -77,14 +74,12 @@ class GrahanaApplet extends Applet.IconApplet {
             }
         }
         
-        // Add Sound Settings at the bottom
         let settingsItem = new PopupMenu.PopupMenuItem("Sound Settings");
         settingsItem.connect('activate', () => {
             GLib.spawn_command_line_async("cinnamon-settings sound");
         });
         this.menu.addMenuItem(settingsItem);
         
-        // Reopen if it was open
         if (wasOpen) {
             this.menu.open();
         }
@@ -128,7 +123,15 @@ class GrahanaApplet extends Applet.IconApplet {
                 icon.icon_name = "audio-volume-muted-symbolic";
                 slider._iconTooltip.set_text(displayName + " (muted)");
                 slider._sliderTooltip.set_text(displayName + " (muted)");
-                GLib.spawn_command_line_async(SET_VOLUME_SCRIPT + " " + stream.id + " 0");
+
+                // Safe argument array
+                GLib.spawn_async(
+                    null,
+                    [SET_VOLUME_SCRIPT, String(stream.id), "0"],
+                    null,
+                    GLib.SpawnFlags.SEARCH_PATH | GLib.SpawnFlags.DO_NOT_REAP_CHILD,
+                    null
+                );
             } else {
                 let newVolume = slider._lastVolume || 50;
                 slider._currentVolume = newVolume;
@@ -136,7 +139,14 @@ class GrahanaApplet extends Applet.IconApplet {
                 icon.icon_name = slider._originalIconName;
                 slider._iconTooltip.set_text(displayName + " (" + newVolume + "%)");
                 slider._sliderTooltip.set_text(displayName + " (" + newVolume + "%)");
-                GLib.spawn_command_line_async(SET_VOLUME_SCRIPT + " " + stream.id + " " + newVolume);
+
+                GLib.spawn_async(
+                    null,
+                    [SET_VOLUME_SCRIPT, String(stream.id), String(newVolume)],
+                    null,
+                    GLib.SpawnFlags.SEARCH_PATH | GLib.SpawnFlags.DO_NOT_REAP_CHILD,
+                    null
+                );
             }
             return true;
         });
@@ -150,7 +160,13 @@ class GrahanaApplet extends Applet.IconApplet {
                 sliderItem._icon.icon_name = sliderItem._originalIconName;
             }
             
-            GLib.spawn_command_line_async(SET_VOLUME_SCRIPT + " " + sliderItem._streamId + " " + newVolume);
+            GLib.spawn_async(
+                null,
+                [SET_VOLUME_SCRIPT, String(sliderItem._streamId), String(newVolume)],
+                null,
+                GLib.SpawnFlags.SEARCH_PATH | GLib.SpawnFlags.DO_NOT_REAP_CHILD,
+                null
+            );
             
             let newTooltipText = sliderItem._streamName + " (" + newVolume + "%)";
             sliderItem._iconTooltip.set_text(newTooltipText);
@@ -165,7 +181,6 @@ class GrahanaApplet extends Applet.IconApplet {
     
     _getIconName(binary, name) {
         let iconMap = {
-            // Browsers
             "firefox-bin": "firefox",
             "firefox": "firefox",
             "librewolf": "librewolf",
@@ -175,12 +190,10 @@ class GrahanaApplet extends Applet.IconApplet {
             "chromium": "chromium",
             "chrome": "google-chrome",
             "google-chrome": "google-chrome",
-            // Apps
             "discord": "discord",
             "spotify": "spotify",
             "steam": "steam",
             "cs2": "steam",
-            // Games
             "wwm.exe": "applications-games",
             "wine64-preloader": "wine",
             "sd_dummy": "applications-games"
